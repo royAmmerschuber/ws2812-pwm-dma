@@ -1,0 +1,40 @@
+[package]
+name = "ws2812-pwm-dma"
+version = "0.1.0"
+edition = "2021"
+categories = [
+    "embedded",
+    "no-std",
+    "hardware-support"]
+keywords = ["smart-leds", "ws2812"]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fugit = "0.3.6"
+embedded-hal = "0.2.7"
+stm32f4xx-hal="0.15.0"
+embedded-dma = "0.2.0"
+
+smart-leds-trait="0.2.1"
+
+bitvec = { version = "1.0.1", default-features = false }
+[features]
+default=["stm32f411"]
+device-selected = []
+stm32f401 = ["device-selected","stm32f4xx-hal/stm32f401"]
+stm32f405 = ["device-selected","stm32f4xx-hal/stm32f405"]
+stm32f407 = ["device-selected","stm32f4xx-hal/stm32f407"]
+stm32f410 = ["device-selected","stm32f4xx-hal/stm32f410"]
+stm32f411 = ["device-selected","stm32f4xx-hal/stm32f411"]
+stm32f412 = ["device-selected","stm32f4xx-hal/stm32f412"]
+stm32f413 = ["device-selected","stm32f4xx-hal/stm32f413"]
+stm32f415 = ["device-selected","stm32f4xx-hal/stm32f415"]
+stm32f417 = ["device-selected","stm32f4xx-hal/stm32f417"]
+stm32f423 = ["device-selected","stm32f4xx-hal/stm32f423"]
+stm32f427 = ["device-selected","stm32f4xx-hal/stm32f427"]
+stm32f429 = ["device-selected","stm32f4xx-hal/stm32f429"]
+stm32f437 = ["device-selected","stm32f4xx-hal/stm32f437"]
+stm32f439 = ["device-selected","stm32f4xx-hal/stm32f439"]
+stm32f446 = ["device-selected","stm32f4xx-hal/stm32f446"]
+stm32f469 = ["device-selected","stm32f4xx-hal/stm32f469"]
+stm32f479 = ["device-selected","stm32f4xx-hal/stm32f479"]
