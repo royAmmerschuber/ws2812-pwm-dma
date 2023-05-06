@@ -120,10 +120,10 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
         stream.disable();
         stream.clear_interrupts();
         stream.set_channel::<STR_CHAN>();
-        stream.set_direct_mode_error_interrupt_enable(true);
-        stream.set_transfer_complete_interrupt_enable(true);
-        stream.set_transfer_error_interrupt_enable(true);
-        stream.set_fifo_error_interrupt_enable(true);
+        // stream.set_direct_mode_error_interrupt_enable(true);
+        // stream.set_transfer_complete_interrupt_enable(true);
+        // stream.set_transfer_error_interrupt_enable(true);
+        // stream.set_fifo_error_interrupt_enable(true);
         stream.set_direction(MemoryToPeripheral);
         stream.set_double_buffer(false);
         stream.set_fifo_enable(true);
@@ -145,7 +145,7 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
         stream
     }
     fn disable_stream(&mut self){
-        self.stream.disable()
+        self.stream.disable();
     }
     fn enable_stream(&mut self,ptr:u32,len:u16){
         self.stream.set_memory_address(ptr);
