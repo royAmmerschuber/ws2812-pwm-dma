@@ -7,6 +7,10 @@ categories = [
     "no-std",
     "hardware-support"]
 keywords = ["smart-leds", "ws2812"]
+description = "Pwm and Dma based Ws2812 led driver"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/royAmmerschuber/ws2812-pwm-dma"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
