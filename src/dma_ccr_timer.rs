@@ -1,6 +1,6 @@
 use stm32f4xx_hal::pac;
 
-/// for enabling/disabling the timer sending requests to the DMA.
+/// internally used to enable/disable the timers DMA requests
 pub trait DmaCcrTimer<const TIM_CHAN:u8>{
     fn enable_dma();
     fn disable_dma();

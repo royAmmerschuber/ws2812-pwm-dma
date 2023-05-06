@@ -1,8 +1,8 @@
-//! test
 #![no_std]
+#![doc = include_str!("../README.md")]
 use core::mem::{self, size_of};
 use bitvec::prelude::{BitArray, Msb0};
-use stm32f4xx_hal::{timer::{Pins,CCR, PwmExt,Pwm}, dma::{MemoryToPeripheral, traits::{PeriAddress, Stream, Channel, DMASet}, ChannelX}, rcc::Clocks};
+use stm32f4xx_hal::{timer::{Pins,CCR, PwmExt,Pwm, Ch}, dma::{MemoryToPeripheral, traits::{PeriAddress, Stream, Channel, DMASet}, ChannelX}, rcc::Clocks};
 use smart_leds_trait::{SmartLedsWrite, RGB8};
 use embedded_hal::PwmPin;
 use embedded_dma::Word;
@@ -10,14 +10,31 @@ use fugit::ExtU32;
 
 
 
-
 mod dma_ccr_timer;
 pub use dma_ccr_timer::DmaCcrTimer;
 
 
-/// paul
-pub struct Ws2812Pwm<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
-    where PINS: Pins<TIM,PINS_CHAN>,
+/// Handles the stream and timer used for writing to the leds
+///
+/// # Example
+/// ```
+/// let led_buf={
+///     static mut led_buf:[u16;24*LED_COUNT+8]=[0;24*LED_COUNT+8];
+///     unsafe{&mut led_buf};
+/// }
+///
+/// let gpiob=dp.GPOB.split();
+/// let dma1=dp.DMA1.split();
+///
+/// let ws_pin=gpiob.pb5.into_alternate();
+///
+/// // uses stream channel 5 and Timer channel 2
+/// let mut ws=Ws2812Pwm::new(dp.TIM3,ws_pin,dma1.5,led_buf,&clocks);
+///
+/// ws.write((0..=LED_COUNT).map(|_|RGB8::new(255,255,255)));
+/// ```
+pub struct Ws2812Pwm<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
+    where PINS: Pins<TIM,Ch<TIM_CHAN,false>>,
           STREAM: Stream,
           TIM:PwmExt+DmaCcrTimer<TIM_CHAN>,
           PINS::Channels:PwmPin,
@@ -27,7 +44,7 @@ pub struct Ws2812Pwm<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:
           <CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize:From<u16>+Word+'static+Copy
         {
     stream:STREAM,
-    tim:Pwm<TIM, PINS_CHAN, PINS, FREQ>,
+    tim:Pwm<TIM, Ch<TIM_CHAN,false>, PINS, FREQ>,
     pins:PINS::Channels,
     buf:&'static mut [<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize],
     duty_0:<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize,
@@ -35,9 +52,9 @@ pub struct Ws2812Pwm<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:
     break_length:usize
 }
 
-impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
-    Ws2812Pwm<TIM,STREAM,PINS,PINS_CHAN,STR_CHAN,TIM_CHAN,FREQ>
-    where PINS: Pins<TIM,PINS_CHAN>,
+impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
+    Ws2812Pwm<TIM,STREAM,PINS,STR_CHAN,TIM_CHAN,FREQ>
+    where PINS: Pins<TIM,Ch<TIM_CHAN,false>>,
           STREAM: Stream,
           TIM:PwmExt+DmaCcrTimer<TIM_CHAN>,
           PINS::Channels:PwmPin,
@@ -46,7 +63,15 @@ impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u3
           CCR<TIM,TIM_CHAN>: PeriAddress + DMASet<STREAM, STR_CHAN, MemoryToPeripheral>,
           <CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize:From<u16>+Word+'static+Copy
 {
-    /// new stuff
+    /// Creates a new [`Ws2812Pwm<...>`](Ws2812Pwm).
+    ///
+    /// consult the implementations of [`DMASet`](stm32f4xx_hal::dma::traits::DMASet) to figure
+    /// out wich Stream channel corresponds to which Timer Channel. And consult the [`CPin`](stm32f4xx_hal::timer::CPin)
+    /// implementations to figure out which gpio pins in which alternate mode correspond to
+    /// which Timer Channel (look at the source, the generated docs seem to have issues with
+    /// the macros). you can also of course instead reference the processors Documentation.
+    ///
+    /// the buffer must at least have a `len()` of `24*NUM_LEDS+8`
     pub fn new(
         tim:TIM,
         pins:PINS,
@@ -82,6 +107,15 @@ impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u3
             break_length
         }
     }
+    /// releases the held resources to be used for something else
+    pub fn release(mut self)->(TIM,STREAM,&'static mut[<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize]){
+        self.pins.disable();
+        self.disable_stream();
+        TIM::disable_dma();
+        return (self.tim.release().release(),self.stream,self.buf)
+    }
+
+
     fn configure_stream(mut stream:STREAM,p_addr:u32)->STREAM{
         stream.disable();
         stream.clear_interrupts();
@@ -123,17 +157,11 @@ impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u3
         assert_eq!(size_of::<TIM>(),size_of::<CCR<TIM,TIM_CHAN>>());
         unsafe{mem::transmute_copy(&tim)}
     }
-    /// releasing debriefing
-    pub fn release(mut self)->(TIM,STREAM,&'static mut[<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize]){
-        self.pins.disable();
-        self.disable_stream();
-        TIM::disable_dma();
-        return (self.tim.release().release(),self.stream,self.buf)
-    }
 }
-impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32> SmartLedsWrite
-    for Ws2812Pwm<TIM,STREAM,PINS,PINS_CHAN,STR_CHAN,TIM_CHAN,FREQ>
-    where PINS: Pins<TIM,PINS_CHAN>,
+
+impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32> SmartLedsWrite
+    for Ws2812Pwm<TIM,STREAM,PINS,STR_CHAN,TIM_CHAN,FREQ>
+    where PINS: Pins<TIM,Ch<TIM_CHAN,false>>,
           STREAM: Stream,
           TIM:PwmExt+DmaCcrTimer<TIM_CHAN>,
           PINS::Channels:PwmPin,
@@ -146,7 +174,14 @@ impl<TIM,STREAM,PINS,PINS_CHAN,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u3
 
     type Color=RGB8;
 
-    /// magic
+    /// stops the current stream overrides the buffer with new colors and restarts the transfer
+    ///
+    /// # Errors
+    /// this function never returns an error
+    ///
+    /// # Panics
+    /// if the buffer overflows this function will panic.
+    /// the buffer must have at least a `len()` of `24*NUM_LEDS+8`
     fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
     where
         T: Iterator<Item = I>,
