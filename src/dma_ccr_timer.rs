@@ -9,44 +9,42 @@ pub trait DmaCcrTimer<const TIM_CHAN:u8>{
 macro_rules! with_dma_int{
     ($TIM:ty, CH4)=>{
         impl<const TIM_CHAN:u8> DmaCcrTimer<TIM_CHAN> for $TIM{
-                    fn enable_dma(){
-                        let tim=unsafe{ &*<$TIM>::ptr() };
-                        match TIM_CHAN{
-                            0=>{
-                                tim.dier.modify(|_,w| w.cc1de().set_bit());
-                            },
-                            1=>{
-                                tim.dier.modify(|_,w| w.cc2de().set_bit());
-                            },
-                            2=>{
-                                tim.dier.modify(|_,w| w.cc3de().set_bit());
-                            },
-                            3=>{
-                                tim.dier.modify(|_,w| w.cc4de().set_bit());
-                            },
-                            _=>unimplemented!()
-                        }
-                        tim.cr1.modify(|_,w|w.cen().set_bit());
-                    }
-                    fn disable_dma(){
-                        let tim=unsafe{ &*<$TIM>::ptr() };
-                        tim.cr1.modify(|_,w|w.cen().clear_bit());
-                        match TIM_CHAN{
-                            0=>{
-                                tim.dier.modify(|_,w| w.cc1de().clear_bit());
-                            },
-                            1=>{
-                                tim.dier.modify(|_,w| w.cc2de().clear_bit());
-                            },
-                            2=>{
-                                tim.dier.modify(|_,w| w.cc3de().clear_bit());
-                            },
-                            3=>{
-                                tim.dier.modify(|_,w| w.cc4de().clear_bit());
-                            },
-                            _=>unimplemented!()
-                        }
-                    }
+            fn enable_dma(){
+                let tim=unsafe{ &*<$TIM>::ptr() };
+                match TIM_CHAN{
+                    0=>{
+                        tim.dier.modify(|_,w| w.cc1de().set_bit());
+                    },
+                    1=>{
+                        tim.dier.modify(|_,w| w.cc2de().set_bit());
+                    },
+                    2=>{
+                        tim.dier.modify(|_,w| w.cc3de().set_bit());
+                    },
+                    3=>{
+                        tim.dier.modify(|_,w| w.cc4de().set_bit());
+                    },
+                    _=>unimplemented!()
+                }
+            }
+            fn disable_dma(){
+                let tim=unsafe{ &*<$TIM>::ptr() };
+                match TIM_CHAN{
+                    0=>{
+                        tim.dier.modify(|_,w| w.cc1de().clear_bit());
+                    },
+                    1=>{
+                        tim.dier.modify(|_,w| w.cc2de().clear_bit());
+                    },
+                    2=>{
+                        tim.dier.modify(|_,w| w.cc3de().clear_bit());
+                    },
+                    3=>{
+                        tim.dier.modify(|_,w| w.cc4de().clear_bit());
+                    },
+                    _=>unimplemented!()
+                }
+            }
         }
     };
     ($TIM:ty, CH2)=>{
@@ -62,11 +60,9 @@ macro_rules! with_dma_int{
                     },
                     _=>unimplemented!()
                 }
-                tim.cr1.modify(|_,w|w.cen().set_bit());
             }
             fn disable_dma(){
                 let tim=unsafe{ &*<$TIM>::ptr() };
-                tim.cr1.modify(|_,w|w.cen().clear_bit());
                 match TIM_CHAN{
                     0=>{
                         tim.dier.modify(|_,w| w.cc1de().clear_bit());
@@ -80,7 +76,7 @@ macro_rules! with_dma_int{
         }
     };
     ($TIM:ty, CH1)=>{
-                impl<const TIM_CHAN:u8> DmaCcrTimer<TIM_CHAN> for $TIM{
+        impl<const TIM_CHAN:u8> DmaCcrTimer<TIM_CHAN> for $TIM{
             fn enable_dma(){
                 let tim=unsafe{ &*<$TIM>::ptr() };
                 match TIM_CHAN{
@@ -89,11 +85,9 @@ macro_rules! with_dma_int{
                     },
                     _=>unimplemented!()
                 }
-                tim.cr1.modify(|_,w|w.cen().set_bit());
             }
             fn disable_dma(){
                 let tim=unsafe{ &*<$TIM>::ptr() };
-                tim.cr1.modify(|_,w|w.cen().clear_bit());
                 match TIM_CHAN{
                     0=>{
                         tim.dier.modify(|_,w| w.cc1de().clear_bit());
