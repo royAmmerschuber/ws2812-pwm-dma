@@ -108,6 +108,22 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
             break_length
         }
     }
+    /// Same as [`Ws2812Pwm::new`] but also enables selected interrupts
+    pub fn new_with_interrupts(
+        tim:TIM,
+        pins:PINS,
+        mut stream:STREAM,
+        buf:&'static mut[<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize],
+        clocks:&Clocks,
+        transfer_complete_interrupt:bool,
+        half_transfer_interrupt:bool,
+        transfer_error_interrupt:bool
+    )->Self{
+      let mut s=Self::new(tim, pins, stream, buf, clocks);
+      s.stream.set_interrupts_enable(transfer_complete_interrupt, half_transfer_interrupt, transfer_error_interrupt, false);
+      s
+    }
+
     /// releases the held resources to be used for something else
     pub fn release(mut self)->(TIM,STREAM,&'static mut[<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize]){
         self.pins.disable();
