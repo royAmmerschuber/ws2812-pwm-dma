@@ -8,7 +8,8 @@ use embedded_hal::PwmPin;
 use embedded_dma::Word;
 use fugit::ExtU32;
 
-
+#[allow(unused_imports)] //for doc link
+use stm32f4xx_hal::timer::pwm::CPin;
 
 mod dma_ccr_timer;
 pub use dma_ccr_timer::DmaCcrTimer;
@@ -65,8 +66,8 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
 {
     /// Creates a new [`Ws2812Pwm<...>`](Ws2812Pwm).
     ///
-    /// consult the implementations of [`DMASet`](stm32f4xx_hal::dma::traits::DMASet) to figure
-    /// out wich Stream channel corresponds to which Timer Channel. And consult the [`CPin`](stm32f4xx_hal::timer::CPin)
+    /// consult the implementations of [`DMASet`] to figure
+    /// out wich Stream channel corresponds to which Timer Channel. And consult the [`CPin`]
     /// implementations to figure out which gpio pins in which alternate mode correspond to
     /// which Timer Channel (look at the source, the generated docs seem to have issues with
     /// the macros). you can also of course instead reference the processors Documentation.
