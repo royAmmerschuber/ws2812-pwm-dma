@@ -137,10 +137,10 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
         stream.disable();
         stream.clear_interrupts();
         stream.set_channel::<STR_CHAN>();
-        // stream.set_direct_mode_error_interrupt_enable(true);
-        // stream.set_transfer_complete_interrupt_enable(true);
-        // stream.set_transfer_error_interrupt_enable(true);
-        // stream.set_fifo_error_interrupt_enable(true);
+        stream.set_direct_mode_error_interrupt_enable(false);
+        stream.set_transfer_complete_interrupt_enable(false);
+        stream.set_transfer_error_interrupt_enable(false);
+        stream.set_fifo_error_interrupt_enable(false);
         stream.set_direction(MemoryToPeripheral);
         stream.set_double_buffer(false);
         stream.set_fifo_enable(true);
@@ -204,6 +204,8 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32> SmartLe
         T: Iterator<Item = I>,
         I: Into<Self::Color> {
         self.disable_stream();
+        //clear interrupts because else it doesnt work (presumably because of the fifoErrFlag, which gets set always)
+        self.stream.clear_interrupts();
         let buf={
             let bits=iterator
                 .flat_map(|c|{
