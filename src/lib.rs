@@ -155,8 +155,9 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
         stream.set_peripheral_increment(false);
         stream.set_peripheral_burst(stm32f4xx_hal::dma::config::BurstMode::NoBurst);
         unsafe{
-            stream.set_memory_size(1);
-            stream.set_peripheral_size(1);
+            let memsize=mem::size_of::<<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize>() as u8-1;
+            stream.set_memory_size(memsize);
+            stream.set_peripheral_size(memsize);
         }
         stream.set_priority(stm32f4xx_hal::dma::config::Priority::Medium);
         stream
