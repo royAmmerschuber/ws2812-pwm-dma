@@ -112,7 +112,7 @@ impl<TIM,STREAM,PINS,const STR_CHAN:u8,const TIM_CHAN:u8,const FREQ:u32>
     pub fn new_with_interrupts(
         tim:TIM,
         pins:PINS,
-        mut stream:STREAM,
+        stream:STREAM,
         buf:&'static mut[<CCR<TIM,TIM_CHAN> as PeriAddress>::MemSize],
         clocks:&Clocks,
         transfer_complete_interrupt:bool,

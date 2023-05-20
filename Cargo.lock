@@ -333,7 +333,7 @@ dependencies = [
 
 [[package]]
 name = "ws2812-pwm-dma"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitvec",
  "embedded-dma",
